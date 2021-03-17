@@ -1,13 +1,15 @@
 package io.microsamples.events.eventedchachkies;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 
@@ -20,50 +22,38 @@ public class EventedChachkiesApplication {
 
 	@Component
 	@Slf4j
+	static
 	class ChachkieConsumer {
 
 		@EventListener
-		void on(ChachkieFulfiled event) {
-			fulfil(event.getChachkie());
+		void on(ChachkieEmitter.ChachkieFulfiled event) {
+			log.info("Fulfiled {}", event.getSource());
 		}
-
-		private void fulfil(Chachkie chachkie) {
-			log.info("Fulfiled {}", chachkie);
-		}
-
 	}
 
 	@Component
 	@AllArgsConstructor
+	static
 	class ChachkieEmitter {
-		private final ChachkieRepository repository;
+		private final ApplicationEventPublisher publisher;
 
 		public void fulfil(Chachkie chachkie) {
-			repository.save(chachkie.fulfil());
+			publisher.publishEvent(new ChachkieFulfiled(chachkie));
 		}
 
-	}
+		@EqualsAndHashCode(callSuper = false)
+		class ChachkieFulfiled extends ApplicationEvent {
 
-	@Repository
-	interface ChachkieRepository {
-
-		void save(Chachkie fulfil);
-	}
-
-	@Value
-	class ChachkieFulfiled {
-		Chachkie chachkie;
+			public ChachkieFulfiled(Object source) {
+				super(source);
+			}
+		}
 	}
 
 	@Value
+	static
 	class Chachkie {
 		Double longitude, latitude;
 		Instant when;
-
-		public Chachkie fulfil() {
-			registerEvent(new ChachkieFulfiled(this));
-			return this;
-		}
 	}
-
 }
