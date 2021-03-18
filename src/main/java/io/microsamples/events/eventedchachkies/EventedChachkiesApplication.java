@@ -21,20 +21,26 @@ public class EventedChachkiesApplication {
 	}
 
 	@Component
-	@Slf4j
-	static
-	class ChachkieConsumer {
+	@AllArgsConstructor
+	static class ChachkieConsumer {
+		private final Fulfiler fulfiler;
 
 		@EventListener
 		void on(ChachkieEmitter.ChachkieFulfiled event) {
-			log.info("Fulfiled {}", event.getSource());
+			fulfiler.fulfil((Chachkie) event.getSource());
 		}
 	}
 
 	@Component
+	@Slf4j
+	static class Fulfiler {
+		void fulfil(Chachkie chachkie){
+			log.info("Fulfiled {}", chachkie);
+		}
+	}
+	@Component
 	@AllArgsConstructor
-	static
-	class ChachkieEmitter {
+	static class ChachkieEmitter {
 		private final ApplicationEventPublisher publisher;
 
 		public void fulfil(Chachkie chachkie) {
@@ -51,8 +57,7 @@ public class EventedChachkiesApplication {
 	}
 
 	@Value
-	static
-	class Chachkie {
+	static class Chachkie {
 		Double longitude, latitude;
 		Instant when;
 	}
